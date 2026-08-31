@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planeador de Campañas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2541;
+    --ink-soft:#3E4B6B;
+    --paper:#EDEEE8;
+    --paper-raised:#F6F6F1;
+    --line:#C9C4B5;
+    --marker:#F4B740;
+    --coral:#E8604C;
+    --sage:#6B8F71;
+    --slate:#8A93A8;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:32px 24px 64px;}
+
+  /* ---- Header ---- */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:18px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:32px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .new-btn{
+    background:var(--ink);
+    color:var(--paper-raised);
+    border:none;
+    padding:10px 18px;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    border-radius:var(--radius);
+  }
+  .new-btn:hover{background:var(--ink-soft);}
+
+  /* ---- Tabs ---- */
+  .tabs{display:flex;gap:2px;margin-bottom:20px;}
+  .tab{
+    padding:9px 20px;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    background:transparent;
+    border:1px solid var(--line);
+    border-bottom:none;
+    color:var(--ink-soft);
+    border-radius:var(--radius) var(--radius) 0 0;
+  }
+  .tab.active{
+    background:var(--paper-raised);
+    color:var(--ink);
+    border-color:var(--ink);
+  }
+
+  /* ---- Filters ---- */
+  .filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    padding:12px 14px;
+    margin-bottom:22px;
+  }
+  .filters select, .filters input{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    padding:6px 8px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    border-radius:var(--radius);
+  }
+  .filters .clear{
+    font-size:13px;
+    color:var(--ink-soft);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    margin-left:auto;
+    align-self:center;
+  }
+
+  /* ---- List view ---- */
+  .month-group{margin-bottom:26px;}
+  .month-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.04em;
+    color:var(--slate);
+    border-bottom:1px solid var(--line);
+    padding-bottom:6px;
+    margin-bottom:10px;
+    text-transform:capitalize;
+  }
+  .campaign-row{
+    display:grid;
+    grid-template-columns:5px 1fr auto auto auto;
+    align-items:center;
+    gap:14px;
+    padding:12px 10px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    margin-bottom:6px;
+    cursor:pointer;
+    transition:border-color .12s;
+  }
+  .campaign-row:hover{border-color:var(--ink);}
+  .chan-bar{width:5px;align-self:stretch;border-radius:2px;}
+  .chan-email{background:var(--marker);}
+  .chan-social{background:var(--coral);}
+  .chan-otro{background:var(--sage);}
+  .row-main .name{font-weight:600;font-size:14.5px;}
+  .row-main .proj{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .row-dates{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  .status-badge{
+    font-size:11px;
+    padding:4px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+    font-weight:500;
+    border:1px solid transparent;
+  }
+  .st-Planeación{background:#fff;border-color:var(--line);color:var(--ink-soft);}
+  .st-En.progreso, .st-En-progreso{background:#FDF1D6;color:#8A6300;}
+  .st-Programada{background:#E4E9F5;color:var(--ink-soft);}
+  .st-Activa{background:#FBE2DC;color:#B23E2A;}
+  .st-Finalizada{background:#E4EDE5;color:#3F5F45;}
+  .del-btn{
+    background:none;border:none;color:var(--slate);cursor:pointer;font-size:16px;
+    padding:2px 6px;
+  }
+  .del-btn:hover{color:var(--coral);}
+
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+    border:1px dashed var(--line);
+  }
+  .empty p{margin:6px 0;}
+  .empty .big{font-family:'Fraunces',serif;font-size:20px;color:var(--ink);}
+
+  /* ---- Calendar view ---- */
+  .cal-nav{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+  }
+  .cal-nav button{
+    background:none;border:1px solid var(--line);width:32px;height:32px;
+    cursor:pointer;font-size:15px;color:var(--ink);border-radius:var(--radius);
+  }
+  .cal-nav button:hover{border-color:var(--ink);}
+  .cal-title{font-family:'Fraunces',serif;font-size:20px;text-transform:capitalize;}
+  .cal-grid{
+    display:grid;grid-template-columns:repeat(7,1fr);
+    border-left:1px solid var(--line);border-top:1px solid var(--line);
+  }
+  .cal-dow{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--slate);
+    padding:6px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:var(--paper-raised);text-transform:uppercase;letter-spacing:.04em;
+  }
+  .cal-cell{
+    min-height:88px;
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:#fff;
+    padding:5px;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .cal-cell.out{background:var(--paper);}
+  .cal-daynum{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .cal-cell.today .cal-daynum{
+    color:#fff;background:var(--ink);width:18px;height:18px;
+    display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:10px;
+  }
+  .chip{
+    font-size:10.5px;padding:2px 5px;border-radius:2px;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+  }
+  .chip.chan-email{background:#8A6300;}
+  .chip.chan-social{background:var(--coral);}
+  .chip.chan-otro{background:var(--sage);}
+
+  /* ---- Modal ---- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(28,37,65,0.4);
+    display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .modal{
+    background:var(--paper-raised);width:100%;max-width:440px;
+    border:1px solid var(--ink);padding:24px;max-height:90vh;overflow-y:auto;
+  }
+  .modal h2{font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:0 0 16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;font-weight:500;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:8px 10px;border:1px solid var(--line);font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;background:#fff;color:var(--ink);border-radius:var(--radius);
+  }
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px;}
+  .modal-actions .save-btn{
+    background:var(--ink);color:#fff;border:none;padding:9px 20px;cursor:pointer;
+    font-size:14px;font-weight:500;border-radius:var(--radius);
+  }
+  .modal-actions .cancel-btn{
+    background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;text-decoration:underline;
+  }
+  .loading{text-align:center;padding:40px;color:var(--ink-soft);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Planeador de Campañas</h1>
+      <div class="subtitle">Todas tus campañas de marketing, en un solo lugar</div>
+    </div>
+    <button class="new-btn" id="newBtn">+ Nueva campaña</button>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-view="lista">Lista</div>
+    <div class="tab" data-view="calendario">Calendario</div>
+  </div>
+
+  <div class="filters">
+    <select id="fProject"><option value="">Proyecto: todos</option></select>
+    <select id="fChannel">
+      <option value="">Canal: todos</option>
+      <option value="Email">Email</option>
+      <option value="Social">Social</option>
+      <option value="Otro">Otro</option>
+    </select>
+    <select id="fStatus">
+      <option value="">Estado: todos</option>
+      <option>Planeación</option>
+      <option>En progreso</option>
+      <option>Programada</option>
+      <option>Activa</option>
+      <option>Finalizada</option>
+    </select>
+    <button class="clear" id="clearFilters">Limpiar filtros</button>
+  </div>
+
+  <div id="content"><div class="loading">Cargando campañas…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://lhjnrcksxbhhrweqldtc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoam5yY2tzeGJoaHJ3ZXFsZHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxODYzMzYsImV4cCI6MjEwMzc2MjMzNn0.ZG7a_z43nTkFzyC8HSY7Wl6CO6JWck6Iw2ime7xsYyk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let campaigns = [];
+let view = 'lista';
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+let editingId = null;
+
+const CHANNEL_CLASS = { Email:'chan-email', Social:'chan-social', Otro:'chan-otro' };
+const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DOWS = ['lun','mar','mié','jue','vie','sáb','dom'];
+
+async function loadCampaigns(){
+  const { data, error } = await sb.from('campaigns').select('*').order('startdate', { ascending: true });
+  if(error){
+    document.getElementById('content').innerHTML =
+      `<div class="empty"><p class="big">No se pudo conectar</p><p>${escapeHtml(error.message)}</p></div>`;
+    return;
+  }
+  campaigns = (data || []).map(r => ({
+    id: r.id,
+    name: r.name,
+    project: r.project || '',
+    channel: r.channel || 'Otro',
+    status: r.status || 'Planeación',
+    startDate: r.startdate,
+    endDate: r.enddate || r.startdate,
+    notes: r.notes || ''
+  }));
+  render();
+}
+
+// Se actualiza sola cuando alguien más agrega, edita o borra una campaña
+sb.channel('campaigns-live')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => loadCampaigns())
+  .subscribe();
+
+function fmtDate(d){
+  const dt = new Date(d + 'T00:00:00');
+  return dt.getDate() + ' ' + MONTHS[dt.getMonth()].slice(0,3);
+}
+
+function statusClass(s){ return 'st-' + s.replace(/\s+/g,'-'); }
+
+function populateProjectFilter(){
+  const sel = document.getElementById('fProject');
+  const current = sel.value;
+  const projects = [...new Set(campaigns.map(c=>c.project).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Proyecto: todos</option>' + projects.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+  sel.value = current;
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function getFiltered(){
+  const p = document.getElementById('fProject').value;
+  const ch = document.getElementById('fChannel').value;
+  const st = document.getElementById('fStatus').value;
+  return campaigns.filter(c =>
+    (!p || c.project===p) && (!ch || c.channel===ch) && (!st || c.status===st)
+  );
+}
+
+function render(){
+  populateProjectFilter();
+  document.getElementById('content').innerHTML = view==='lista' ? renderList() : renderCalendar();
+  if(view==='calendario') attachCalendarNav();
+  attachRowHandlers();
+}
+
+function renderList(){
+  const list = getFiltered().slice().sort((a,b)=> a.startDate.localeCompare(b.startDate));
+  if(list.length===0){
+    return `<div class="empty"><p class="big">Todavía no hay campañas</p><p>Crea la primera con "Nueva campaña" y aparecerá aquí, organizada por mes.</p></div>`;
+  }
+  const groups = {};
+  list.forEach(c=>{
+    const dt = new Date(c.startDate + 'T00:00:00');
+    const key = dt.getFullYear() + '-' + String(dt.getMonth()).padStart(2,'0');
+    groups[key] = groups[key] || { label: MONTHS[dt.getMonth()] + ' ' + dt.getFullYear(), items: [] };
+    groups[key].items.push(c);
+  });
+  return Object.keys(groups).sort().map(key=>{
+    const g = groups[key];
+    return `<div class="month-group">
+      <div class="month-label">${g.label}</div>
+      ${g.items.map(c=>`
+        <div class="campaign-row" data-id="${c.id}">
+          <div class="chan-bar ${CHANNEL_CLASS[c.channel]||'chan-otro'}"></div>
+          <div class="row-main">
+            <div class="name">${escapeHtml(c.name)}</div>
+            <div class="proj">${escapeHtml(c.project || 'Sin proyecto')} · ${escapeHtml(c.channel)}</div>
+          </div>
+          <div class="row-dates">${fmtDate(c.startDate)}${c.endDate && c.endDate!==c.startDate ? ' – ' + fmtDate(c.endDate) : ''}</div>
+          <div class="status-badge ${statusClass(c.status)}">${escapeHtml(c.status)}</div>
+          <button class="del-btn" data-del="${c.id}" title="Eliminar">✕</button>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderCalendar(){
+  const first = new Date(calYear, calMonth, 1);
+  let startOffset = first.getDay() - 1; // Monday-first
+  if(startOffset < 0) startOffset = 6;
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  const cells = [];
+  for(let i=startOffset-1;i>=0;i--){
+    cells.push({ day: daysInPrevMonth-i, out:true, dateStr:null });
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push({ day:d, out:false, dateStr });
+  }
+  while(cells.length % 7 !== 0){
+    cells.push({ day: cells.length - (startOffset+daysInMonth) + 1, out:true, dateStr:null });
+  }
+
+  const filtered = getFiltered();
+
+  const cellsHtml = cells.map(cell=>{
+    if(cell.out) return `<div class="cal-cell out"><div class="cal-daynum">${cell.day}</div></div>`;
+    const dayCampaigns = filtered.filter(c => c.startDate <= cell.dateStr && (c.endDate||c.startDate) >= cell.dateStr);
+    const isToday = cell.dateStr === todayStr;
+    return `<div class="cal-cell${isToday?' today':''}">
+      <div class="cal-daynum">${cell.day}</div>
+      ${dayCampaigns.slice(0,3).map(c=>`<div class="chip ${CHANNEL_CLASS[c.channel]||'chan-otro'}" data-id="${c.id}">${escapeHtml(c.name)}</div>`).join('')}
+      ${dayCampaigns.length>3 ? `<div class="chip" style="background:var(--ink-soft)">+${dayCampaigns.length-3} más</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="cal-nav">
+      <button id="prevMonth">‹</button>
+      <div class="cal-title">${MONTHS[calMonth]} ${calYear}</div>
+      <button id="nextMonth">›</button>
+    </div>
+    <div class="cal-grid">
+      ${DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cellsHtml}
+    </div>
+  `;
+}
+
+function attachCalendarNav(){
+  document.getElementById('prevMonth').onclick = ()=>{
+    calMonth--; if(calMonth<0){calMonth=11;calYear--;}
+    render();
+  };
+  document.getElementById('nextMonth').onclick = ()=>{
+    calMonth++; if(calMonth>11){calMonth=0;calYear++;}
+    render();
+  };
+}
+
+function attachRowHandlers(){
+  document.querySelectorAll('[data-id]').forEach(el=>{
+    el.onclick = (e)=>{
+      if(e.target.closest('[data-del]')) return;
+      openModal(el.getAttribute('data-id'));
+    };
+  });
+  document.querySelectorAll('[data-del]').forEach(el=>{
+    el.onclick = async (e)=>{
+      e.stopPropagation();
+      const id = el.getAttribute('data-del');
+      await sb.from('campaigns').delete().eq('id', id);
+      loadCampaigns();
+    };
+  });
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    view = t.getAttribute('data-view');
+    render();
+  };
+});
+
+['fProject','fChannel','fStatus'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', render);
+});
+document.getElementById('clearFilters').onclick = ()=>{
+  document.getElementById('fProject').value='';
+  document.getElementById('fChannel').value='';
+  document.getElementById('fStatus').value='';
+  render();
+};
+
+function openModal(id){
+  editingId = id || null;
+  const c = id ? campaigns.find(c=>String(c.id)===String(id)) : null;
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h2>${c ? 'Editar campaña' : 'Nueva campaña'}</h2>
+      <div class="field">
+        <label>Nombre de la campaña</label>
+        <input id="mName" value="${c ? escapeHtml(c.name) : ''}" placeholder="Ej. Lanzamiento MO-211 otoño">
+      </div>
+      <div class="field">
+        <label>Proyecto</label>
+        <input id="mProject" list="projList" value="${c ? escapeHtml(c.project||'') : ''}" placeholder="Ej. Excel Expert 365">
+        <datalist id="projList">${[...new Set(campaigns.map(x=>x.project).filter(Boolean))].map(p=>`<option value="${escapeHtml(p)}">`).join('')}</datalist>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Canal</label>
+          <select id="mChannel">
+            ${['Email','Social','Otro'].map(o=>`<option ${c&&c.channel===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="mStatus">
+            ${['Planeación','En progreso','Programada','Activa','Finalizada'].map(o=>`<option ${c&&c.status===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Fecha inicio</label>
+          <input type="date" id="mStart" value="${c ? c.startDate : new Date().toISOString().slice(0,10)}">
+        </div>
+        <div class="field">
+          <label>Fecha fin</label>
+          <input type="date" id="mEnd" value="${c ? (c.endDate||c.startDate) : new Date().toISOString().slice(0,10)}">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notas</label>
+        <textarea id="mNotes" placeholder="Estrategia, segmento, enlaces...">${c ? escapeHtml(c.notes||'') : ''}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" id="mCancel">Cancelar</button>
+        <button class="save-btn" id="mSave">${c ? 'Guardar cambios' : 'Crear campaña'}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+  document.getElementById('mCancel').onclick = ()=> overlay.remove();
+  document.getElementById('mSave').onclick = async ()=>{
+    const name = document.getElementById('mName').value.trim();
+    if(!name){ document.getElementById('mName').focus(); return; }
+    const payload = {
+      name,
+      project: document.getElementById('mProject').value.trim(),
+      channel: document.getElementById('mChannel').value,
+      status: document.getElementById('mStatus').value,
+      startdate: document.getElementById('mStart').value,
+      enddate: document.getElementById('mEnd').value || document.getElementById('mStart').value,
+      notes: document.getElementById('mNotes').value.trim()
+    };
+    const saveBtn = document.getElementById('mSave');
+    saveBtn.textContent = 'Guardando…';
+    saveBtn.disabled = true;
+    const { error } = c
+      ? await sb.from('campaigns').update(payload).eq('id', c.id)
+      : await sb.from('campaigns').insert(payload);
+    if(error){
+      alert('No se pudo guardar: ' + error.message);
+      saveBtn.textContent = c ? 'Guardar cambios' : 'Crear campaña';
+      saveBtn.disabled = false;
+      return;
+    }
+    overlay.remove();
+    loadCampaigns();
+  };
+}
+
+document.getElementById('newBtn').onclick = ()=> openModal(null);
+
+loadCampaigns();
+</script>
+</body>
+</html>
